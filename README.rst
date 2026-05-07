@@ -23,16 +23,28 @@ Usage
 
     client = TrelloClient(
         api_key='your-key',
-        api_secret='your-secret',
+        api_token='your-token',
+    )
+
+For new integrations, create or select a Power-Up in Trello's Power-Up Admin
+Portal (https://trello.com/power-ups/admin/), then generate the API key from the
+Power-Up's API Key page. Personal keys shown at https://trello.com/app-key are
+legacy and should only be used as a local-testing fallback. The older
+``api_secret`` argument is still accepted as a backwards-compatible alias for
+``api_token`` when you are not using OAuth1.
+
+For 3-legged OAuth1, pass the OAuth credentials explicitly:
+
+.. code-block:: python
+
+    client = TrelloClient(
+        api_key='your-key',
+        api_secret='your-api-secret',
         token='your-oauth-token-key',
         token_secret='your-oauth-token-secret'
     )
 
-Where ``token`` and ``token_secret`` come from the 3-legged OAuth process and
-``api_key`` and ``api_secret`` are your Trello API credentials that are
-(`generated here <https://trello.com/1/appKey/generate>`_).
-
-To use without 3-legged OAuth, use only ``api_key`` and ``api_secret`` on client.
+Where ``token`` and ``token_secret`` come from the 3-legged OAuth process.
 
 Working with boards
 --------------------
@@ -71,8 +83,9 @@ Trello's default OAuth Token expiration is 30 days.
 
 Default permissions are read/write.
 
-More info on setting the expiration here:
-https://trello.com/docs/gettingstarted/#getting-a-token-from-a-user
+More info on generating and authorizing tokens is in Atlassian's Trello API
+introduction:
+https://developer.atlassian.com/cloud/trello/guides/rest-api/api-introduction/
 
 Run
 
@@ -88,15 +101,23 @@ Found in ``requirements.txt``
 Tests
 =====
 
-To run the tests, run ``python -m unittest discover``. Four environment variables must be set:
+To run the offline unit tests, run ``PYTHONDONTWRITEBYTECODE=1 python -m unittest test.test_api_alignment``.
 
+To run live integration tests against Trello, follow ``docs/live-testing.rst``.
+The live tests are skipped unless credentials are configured and
+``TRELLO_RUN_LIVE_TESTS=1`` is set. Start from ``test/live.env.example`` and keep
+real credentials in an uncommitted file such as ``.env.live``.
+
+The live tests require these environment variables:
+
+* ``TRELLO_RUN_LIVE_TESTS=1``: explicit opt-in for destructive live tests
 * ``TRELLO_API_KEY``: your Trello API key
-* ``TRELLO_TOKEN``: your Trello OAuth token
-* ``TRELLO_TEST_BOARD_COUNT``: the number of boards in your Trello account
-* ``TRELLO_TEST_BOARD_NAME``: name of the board to test card manipulation on. Must be unique, or the first match will be used
-* ``TRELLO_TEST_STAR_COUNT``: the number of stars on your test Trello board
+* ``TRELLO_TOKEN``: your Trello token
 
-*WARNING*: The tests will delete all cards on the board called `TRELLO_TEST_BOARD_NAME`!
+The live suite creates a private temporary board, runs the tests against it, and
+deletes that board at process exit. You can set ``TRELLO_TEST_BOARD_NAME_PREFIX``
+to customize the generated board name prefix. Paid-only Trello features should be
+covered by unit tests or skipped unless paid credentials are available.
 
 To run tests across various Python versions,
 `tox <https://tox.readthedocs.io/en/latest/>`_ is supported. Install it

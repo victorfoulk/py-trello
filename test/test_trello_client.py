@@ -5,7 +5,10 @@ import unittest
 from datetime import datetime
 from trello import TrelloClient, Unauthorized, ResourceUnavailable
 
+from test.live_trello import get_test_board, requires_live_trello, live_client
 
+
+@requires_live_trello
 class TrelloClientTestCase(unittest.TestCase):
     """
 
@@ -16,13 +19,12 @@ class TrelloClientTestCase(unittest.TestCase):
     """
 
     def setUp(self):
-        self._trello = TrelloClient(os.environ['TRELLO_API_KEY'],
-                                    token=os.environ['TRELLO_TOKEN'])
+        self._trello = live_client()
 
     def test01_list_boards(self):
-        self.assertEqual(
-            len(self._trello.list_boards(board_filter="open")),
-            int(os.environ['TRELLO_TEST_BOARD_COUNT']))
+        test_board = get_test_board(self._trello)
+        open_boards = self._trello.list_boards(board_filter="open")
+        self.assertTrue(any(board.id == test_board.id for board in open_boards))
 
     def test10_board_attrs(self):
         boards = self._trello.list_boards()
@@ -115,20 +117,23 @@ class TrelloClientTestCase(unittest.TestCase):
         """
         Test trello client star list
         """
-        self.assertEqual(len(self._trello.list_stars()), int(os.environ["TRELLO_TEST_STAR_COUNT"]), "Number of stars does not match TRELLO_TEST_STAR_COUNT")
+        self.assertIsInstance(self._trello.list_stars(), list)
 
     def test_add_delete_star(self):
         """
         Test add and delete star to/from test board
         """
-        test_board_id = self._trello.search(os.environ["TRELLO_TEST_BOARD_NAME"])[0].id
-        new_star = self._trello.add_star(test_board_id)
+        test_board = get_test_board(self._trello)
+        original_stars = self._trello.list_stars()
+        new_star = self._trello.add_star(test_board.id)
         star_list = self._trello.list_stars()
         self.assertTrue(new_star in star_list, "Star id was not added in list of starred boards")
         deleted_star = self._trello.delete_star(new_star)
         star_list = self._trello.list_stars()
         self.assertFalse(deleted_star in star_list, "Star id was not deleted from list of starred boards")
+        self.assertEqual(len(star_list), len(original_stars))
 
+@requires_live_trello
 class TrelloClientTestCaseWithoutOAuth(unittest.TestCase):
     """
 
@@ -137,8 +142,7 @@ class TrelloClientTestCaseWithoutOAuth(unittest.TestCase):
     """
 
     def setUp(self):
-        self._trello = TrelloClient(os.environ['TRELLO_API_KEY'],
-                                    api_secret=os.environ['TRELLO_TOKEN'])
+        self._trello = live_client()
 
     def test01_oauth_not_activated(self):
         self.assertIsNone(self._trello.oauth)

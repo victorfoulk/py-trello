@@ -5,7 +5,10 @@ import unittest
 import os
 from trello import TrelloClient, Board
 
+from test.live_trello import get_test_board, live_client, requires_live_trello
 
+
+@requires_live_trello
 class TrelloBoardTestCase(unittest.TestCase):
     """
     Tests for TrelloClient API. Note these test are in order to
@@ -15,14 +18,8 @@ class TrelloBoardTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls._trello = TrelloClient(os.environ['TRELLO_API_KEY'],
-                                   token=os.environ['TRELLO_TOKEN'])
-        for b in cls._trello.list_boards():
-            if b.name == os.environ['TRELLO_TEST_BOARD_NAME']:
-                cls._board = b
-                break
-        if not cls._board:
-            cls.fail("Couldn't find test board")
+        cls._trello = live_client()
+        cls._board = get_test_board(cls._trello)
         cls._list = cls._board.add_list(str(datetime.now()))
 
     def _add_card(self, name, description=None):
@@ -142,18 +139,20 @@ class TrelloBoardTestCase(unittest.TestCase):
         self.assertEqual(self._board.name, board.name)
 
     def test100_add_board(self):
-        test_board = self._trello.add_board("test_create_board")
+        self.__class__._created_board_name = self._board.name + "-created"
+        self.__class__._copied_board_name = self._board.name + "-copied"
+        test_board = self._trello.add_board(self._created_board_name)
         test_list = test_board.add_list("test_list")
         test_list.add_card("test_card")
         open_boards = self._trello.list_boards(board_filter="open")
-        self.assertEqual(len([x for x in open_boards if x.name == "test_create_board"]), 1)
+        self.assertEqual(len([x for x in open_boards if x.name == self._created_board_name]), 1)
 
     def test110_copy_board(self):
         boards = self._trello.list_boards(board_filter="open")
-        source_board = next( x for x in boards if x.name == "test_create_board")
-        self._trello.add_board("copied_board", source_board=source_board)
+        source_board = next( x for x in boards if x.name == self._created_board_name)
+        self._trello.add_board(self._copied_board_name, source_board=source_board)
         listed_boards = self._trello.list_boards(board_filter="open")
-        copied_board = next(iter([x for x in listed_boards if x.name == "copied_board"]), None)
+        copied_board = next(iter([x for x in listed_boards if x.name == self._copied_board_name]), None)
         self.assertIsNotNone(copied_board)
         open_lists = copied_board.open_lists()
         self.assertEqual(len(open_lists), 4) # default lists plus mine
@@ -165,13 +164,15 @@ class TrelloBoardTestCase(unittest.TestCase):
     def test120_close_board(self):
         boards = self._trello.list_boards(board_filter="open")
         open_count = len(boards)
-        test_create_board = next( x for x in boards if x.name == "test_create_board") # type: Board
-        copied_board = next( x for x in boards if x.name == "copied_board") # type: Board
+        test_create_board = next( x for x in boards if x.name == self._created_board_name) # type: Board
+        copied_board = next( x for x in boards if x.name == self._copied_board_name) # type: Board
         test_create_board.close()
         copied_board.close()
         still_open_boards = self._trello.list_boards(board_filter="open")
         still_open_count = len(still_open_boards)
         self.assertEqual(still_open_count, open_count - 2)
+        test_create_board.delete()
+        copied_board.delete()
 
     def test130_get_checklists_board(self):
         chklists = self._board.get_checklists(cards = 'open')

@@ -170,7 +170,7 @@ class CustomFieldText(CustomField):
 		"""
 		assert isinstance(value, unicode), "Given value is no unicode!"
 		self.client.fetch_json(
-			'/card/' + self.card.id + '/customField/' + self.definition_id + '/item',
+			'/cards/' + self.card.id + '/customField/' + self.definition_id + '/item',
 			http_method='PUT',
 			post_args={'value': { 'text': value, }, }, )
 		self._value = value
@@ -211,7 +211,7 @@ class CustomFieldCheckbox(CustomField):
 		"""
 		assert isinstance(value, bool), "Given value is no bool!"
 		self.client.fetch_json(
-			'/card/' + self.card.id + '/customField/' + self.definition_id + '/item',
+			'/cards/' + self.card.id + '/customField/' + self.definition_id + '/item',
 			http_method='PUT',
 			post_args={'value': { 'checked': u"true" if value else u"false", }, }, )
 		self._value = value
@@ -254,7 +254,7 @@ class CustomFieldDate(CustomField):
 		assert isinstance(value, str) or isinstance(value, unicode), "Given value is no str or unicode!"
 		time.strptime(value, '%Y-%m-%dT%H:%M:%S.000Z')
 		self.client.fetch_json(
-			'/card/' + self.card.id + '/customField/' + self.definition_id + '/item',
+			'/cards/' + self.card.id + '/customField/' + self.definition_id + '/item',
 			http_method='PUT',
 			post_args={'value': { 'date': value, }, }, )
 		self._value = value
@@ -312,7 +312,7 @@ class CustomFieldList(CustomField):
 		newvalue = self._str2id(value)
 		assert newvalue is not None, "Unknown value has been specified!"
 		self.client.fetch_json(
-			'/card/' + self.card.id + '/customField/' + self.definition_id + '/item',
+			'/cards/' + self.card.id + '/customField/' + self.definition_id + '/item',
 			http_method='PUT',
 			post_args={'idValue': newvalue,}, )
 		self._value = newvalue
@@ -353,7 +353,7 @@ class CustomFieldNumber(CustomField):
 		"""
 		assert isinstance(value, int) or isinstance(value, float), "Given value is no int or float!"
 		self.client.fetch_json(
-			'/card/' + self.card.id + '/customField/' + self.definition_id + '/item',
+			'/cards/' + self.card.id + '/customField/' + self.definition_id + '/item',
 			http_method='PUT',
 			post_args={'value': { 'number': str(value), }, }, )
 		self._value = value

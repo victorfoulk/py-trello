@@ -16,9 +16,15 @@ def create_oauth_token(expiration=None, scope=None, key=None, secret=None, name=
     """
     Script to obtain an OAuth token from Trello.
 
-    Must have TRELLO_API_KEY and TRELLO_API_SECRET set in your environment
+    Must have TRELLO_API_KEY and TRELLO_API_SECRET set in your environment.
     To set the token's expiration, set TRELLO_EXPIRATION as a string in your
     environment settings (eg. 'never'), otherwise it will default to 30 days.
+
+    When ``output`` is true this helper prints OAuth tokens and token secrets to
+    stdout for interactive setup. Do not enable output in CI logs, shared
+    terminals, or other places where credentials may be retained. Pass
+    ``output=False`` and store the returned token data through your own secret
+    management flow when automating token creation.
 
     More info on token scope here:
         https://trello.com/docs/gettingstarted/#getting-a-token-from-a-user

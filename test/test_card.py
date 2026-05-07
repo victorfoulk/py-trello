@@ -5,7 +5,10 @@ import unittest
 import os
 from trello import TrelloClient, ResourceUnavailable
 
+from test.live_trello import get_test_board, live_client, requires_live_trello
 
+
+@requires_live_trello
 class TrelloCardTestCase(unittest.TestCase):
     """
     Tests for TrelloClient API. Note these test are in order to
@@ -15,14 +18,8 @@ class TrelloCardTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls._trello = TrelloClient(os.environ['TRELLO_API_KEY'],
-                                   token=os.environ['TRELLO_TOKEN'])
-        for b in cls._trello.list_boards():
-            if b.name == os.environ['TRELLO_TEST_BOARD_NAME']:
-                cls._board = b
-                break
-        if not cls._board:
-            cls.fail("Couldn't find test board")
+        cls._trello = live_client()
+        cls._board = get_test_board(cls._trello)
         cls._list = cls._board.add_list(str(datetime.now()))
 
     def _add_card(self, name, description=None):

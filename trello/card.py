@@ -242,12 +242,10 @@ class Card(TrelloBase):
 
     def fetch_checklists(self):
 
-        if self.countCheckLists == 0:
-            return []
-
         checklists = []
         json_obj = self.client.fetch_json(
             '/cards/' + self.id + '/checklists', )
+        self.countCheckLists = len(json_obj)
         # Thanks https://github.com/HuffAndPuff for noticing checklist
         # were not sorted
         json_obj = sorted(json_obj, key=lambda checklist: checklist['pos'])
@@ -603,7 +601,7 @@ class Card(TrelloBase):
             post_args = {'idValue': list_field_id}
 
         self.client.fetch_json(
-            '/card/' + self.id + '/customField/' + custom_field.id + '/item',
+            '/cards/' + self.id + '/customField/' + custom_field.id + '/item',
             http_method='PUT',
             post_args=post_args)
 
@@ -625,7 +623,7 @@ class Card(TrelloBase):
 
     def assign(self, member_id):
         self.client.fetch_json(
-            '/cards/' + self.id + '/members',
+            '/cards/' + self.id + '/idMembers',
             http_method='POST',
             post_args={'value': member_id})
 
@@ -654,7 +652,7 @@ class Card(TrelloBase):
     def update_comment(self, comment_id, comment_text):
         """Update a comment."""
         comment_data = self.client.fetch_json(
-            '/actions/' + comment_id,
+            '/cards/' + self.id + '/actions/' + comment_id + '/comments',
             http_method='PUT',
             post_args={'text': comment_text}
         )

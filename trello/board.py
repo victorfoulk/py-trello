@@ -330,7 +330,7 @@ class Board(TrelloBase):
 		:rtype: instance of Label
 		"""
 		json_obj = self.client.fetch_json(
-			'/boards/' + self.id + '/labels/' + label_id
+			'/labels/' + label_id
 		)
 		
 		return Label.from_json(self, json_obj)
@@ -611,11 +611,11 @@ class Board(TrelloBase):
 			board_id = self.id
 		if filters:
 			if not filters in ("enabled", "available"):
-				filers = "enabled"
+				filters = "enabled"
 			arguments['filter'] = filters
 		json_obj = self.client.fetch_json(
 			'/boards/' + board_id +'/plugins',
-			 http_method='GET',post_args=arguments, )
+			 http_method='GET', query_params=arguments, )
 		return list([PowerUp.from_json(self, json_obj=json) for json in json_obj])
 	def enable_power_up(self, powerup_id,board_id=None):
 		from warnings import warn
@@ -633,7 +633,7 @@ class Board(TrelloBase):
 		if board_id is None:
 			board_id = self.id
 		json_obj = self.client.fetch_json(
-			'boards/' + board_id + '/boardPlugins' + powerup_id,
+			'boards/' + board_id + '/boardPlugins/' + powerup_id,
 			http_method='DELETE')
 		return json_obj
 	def get_enabled_power_ups(self, board_id=None, name='',):
@@ -645,6 +645,5 @@ class Board(TrelloBase):
 		json_obj = self.client.fetch_json(
 			'boards/' + board_id + '/boardPlugins',
 			http_method='GET')
-		print(json_obj)
 		return list([PowerUp.from_json(self, json_obj=json) for json in json_obj])
 

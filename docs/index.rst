@@ -8,6 +8,7 @@ Modules
    :maxdepth: 4
 
    trello
+   live-testing
 
 Readme
 ======
