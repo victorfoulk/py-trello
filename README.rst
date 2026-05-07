@@ -4,8 +4,10 @@ are cached, but the child objects are not. This can possibly be improved when
 the API allows for notification subscriptions; this would allow caching
 (assuming a connection was available to invalidate the cache as appropriate).
 
-I've created a `Trello Board <https://trello.com/board/py-trello/4f145d87b2f9f15d6d027b53>`_
-for feature requests, discussion and some development tracking.
+This repository is the maintained ``VictorFoulk/py-trello`` fork of the
+original ``sarumont/py-trello`` project. Original project history and authorship
+are preserved; fork-specific maintenance, compatibility fixes, and testing
+workflow updates live at https://github.com/VictorFoulk/py-trello.
 
 Install
 =======

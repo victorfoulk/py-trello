@@ -1,4 +1,12 @@
+**VictorFoulk maintained fork - 2026-05-07**
 
+- Fast-forwarded the fork to the latest available upstream `sarumont/py-trello` codebase before applying fork-specific maintenance.
+- Updated Trello REST API compatibility for current endpoint paths, including board, list, card, checklist, custom-field, organization, and Power-Up related operations.
+- Added clearer key/token authentication support via `api_token` while preserving the older `api_secret` alias and OAuth1 flows.
+- Hardened request handling by redacting Trello credentials from raised API error URLs, avoiding caller-parameter mutation, and removing mutable default argument hazards.
+- Added offline API-alignment and diagnostic tests, plus a live Trello testing workflow with Power-Up API key guidance, `.env.live` loading, preflight checks, disposable board creation, cleanup, and board deletion.
+- Updated documentation for current Trello key generation, live testing, secret storage expectations, and this repository's status as a maintained fork.
+- Verified the package with the offline unittest suite and a live Trello free-tier test run against a disposable board.
 
 **v0.1.6**
 

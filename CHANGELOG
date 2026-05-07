@@ -1,3 +1,7 @@
+VictorFoulk maintained fork - 2026-05-07
+
+Fast-forwarded to the latest available upstream sarumont/py-trello codebase, then updated current Trello API endpoint compatibility, key/token authentication, API error credential redaction, mutable default safety, documentation, offline API-alignment checks, and live Trello testing with disposable board cleanup and deletion.
+
 v0.1.0
 Initial release
 

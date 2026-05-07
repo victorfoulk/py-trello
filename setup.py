@@ -6,12 +6,13 @@ setup(
     name="py-trello",
     version="0.20.1",
 
-    description='Python wrapper around the Trello API',
+    description='Maintained fork of the Python wrapper around the Trello API',
     long_description=open('README.rst').read(),
     author='Richard Kolkovich',
     author_email='richard@sigil.org',
-    url='https://trello.com/board/py-trello/4f145d87b2f9f15d6d027b53',
-    download_url='https://github.com/sarumont/py-trello',
+    maintainer='Victor Foulk',
+    url='https://github.com/VictorFoulk/py-trello',
+    download_url='https://github.com/VictorFoulk/py-trello',
     keywords='python',
     license='BSD License',
     classifiers=[
