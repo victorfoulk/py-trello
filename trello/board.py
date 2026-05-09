@@ -19,7 +19,7 @@ class Board(TrelloBase):
 	an API call (Lists, Cards).
 	"""
 
-	def __init__(self, client=None, board_id=None, organization=None, name=''):
+	def __init__(self, client=None, board_id=None, organization=None, name='', organization_id=None):
 		"""
 		:trello: Reference to a Trello object
 		:board_id: ID for the board
@@ -38,6 +38,9 @@ class Board(TrelloBase):
 			self.client = organization.client
 		self.id = board_id
 		self.name = name
+		if organization is not None and organization_id is None:
+			organization_id = organization.id
+		self.organization_id = organization_id
 		self._date_last_activity = None
 		self.customFieldDefinitions = None
 
@@ -56,10 +59,14 @@ class Board(TrelloBase):
 		:organization: the organization object that the board belongs to
 		:json_obj: the json board object
 		"""
+		organization_id = json_obj.get('idOrganization')
+		if organization is not None and organization_id is None:
+			organization_id = organization.id
+
 		if organization is None:
-			board = Board(client=trello_client, board_id=json_obj['id'], name=json_obj['name'])
+			board = Board(client=trello_client, board_id=json_obj['id'], name=json_obj['name'], organization_id=organization_id)
 		else:
-			board = Board(organization=organization, board_id=json_obj['id'], name=json_obj['name'])
+			board = Board(organization=organization, board_id=json_obj['id'], name=json_obj['name'], organization_id=organization_id)
 
 		board.description = json_obj.get('desc', '')
 		board.closed = json_obj['closed']
@@ -77,6 +84,8 @@ class Board(TrelloBase):
 		self.description = json_obj.get('desc', '')
 		self.closed = json_obj['closed']
 		self.url = json_obj['url']
+		if 'idOrganization' in json_obj:
+			self.organization_id = json_obj.get('idOrganization')
 		self.customFieldDefinitions = None
 
 	# Saves a Trello Board
@@ -646,4 +655,3 @@ class Board(TrelloBase):
 			'boards/' + board_id + '/boardPlugins',
 			http_method='GET')
 		return list([PowerUp.from_json(self, json_obj=json) for json in json_obj])
-

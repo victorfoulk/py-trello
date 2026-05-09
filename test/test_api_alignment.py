@@ -5,6 +5,8 @@ from trello import TrelloClient
 from trello.board import Board
 from trello.card import Card
 from trello.checklist import Checklist
+from trello.member import Member
+from trello.organization import Organization
 
 
 class DummyResponse(object):
@@ -36,6 +38,20 @@ class RecordingClient(object):
     def fetch_json(self, uri_path, **kwargs):
         self.calls.append((uri_path, kwargs))
         return self.payload
+
+
+class RoutingClient(object):
+    def __init__(self, payloads=None):
+        self.payloads = {} if payloads is None else payloads
+        self.calls = []
+
+    def fetch_json(self, uri_path, **kwargs):
+        self.calls.append((uri_path, kwargs))
+        return self.payloads[uri_path]
+
+    def get_organization(self, organization_id):
+        payload = self.fetch_json('/organizations/' + organization_id)
+        return Organization.from_json(self, payload)
 
 
 class ApiAlignmentTestCase(unittest.TestCase):
@@ -125,6 +141,130 @@ class ApiAlignmentTestCase(unittest.TestCase):
             '/checklists/checklist-id/checkItems/two',
         ])
         self.assertEqual(checklist.items, [])
+
+    def test_board_from_json_preserves_organization_id(self):
+        board = Board.from_json(trello_client=RecordingClient(), json_obj={
+            'id': 'board-id',
+            'name': 'Board',
+            'desc': '',
+            'closed': False,
+            'url': 'https://trello.example/board',
+            'idOrganization': 'org-id',
+        })
+
+        self.assertEqual(board.organization_id, 'org-id')
+
+    def test_board_from_json_uses_attached_organization_id_when_payload_omits_it(self):
+        organization = Organization(RecordingClient(), 'org-id', name='org')
+        board = Board.from_json(organization=organization, json_obj={
+            'id': 'board-id',
+            'name': 'Board',
+            'desc': '',
+            'closed': False,
+            'url': 'https://trello.example/board',
+        })
+
+        self.assertIs(board.organization, organization)
+        self.assertEqual(board.organization_id, 'org-id')
+
+    def test_board_fetch_refreshes_organization_id(self):
+        client = RecordingClient({
+            'id': 'board-id',
+            'name': 'Board',
+            'desc': '',
+            'closed': False,
+            'url': 'https://trello.example/board',
+            'idOrganization': 'org-id',
+        })
+        board = Board(client=client, board_id='board-id')
+
+        board.fetch()
+
+        self.assertEqual(board.organization_id, 'org-id')
+
+    def test_board_fetch_preserves_organization_id_when_payload_omits_it(self):
+        client = RecordingClient({
+            'id': 'board-id',
+            'name': 'Board',
+            'desc': '',
+            'closed': False,
+            'url': 'https://trello.example/board',
+        })
+        board = Board(
+            client=client,
+            board_id='board-id',
+            organization_id='old-org-id',
+        )
+
+        board.fetch()
+
+        self.assertEqual(board.organization_id, 'old-org-id')
+
+    def test_trello_client_board_lookup_paths_preserve_organization_id(self):
+        board_payload = {
+            'id': 'board-id',
+            'name': 'Board',
+            'desc': '',
+            'closed': False,
+            'url': 'https://trello.example/board',
+            'idOrganization': 'org-id',
+        }
+
+        list_client = TrelloClient(
+            'key',
+            api_token='token',
+            http_service=RecordingHttpService([board_payload]),
+        )
+        listed_boards = list_client.list_boards()
+        self.assertEqual(listed_boards[0].organization_id, 'org-id')
+
+        get_client = TrelloClient(
+            'key',
+            api_token='token',
+            http_service=RecordingHttpService(board_payload),
+        )
+        board = get_client.get_board('board-id')
+        self.assertEqual(board.organization_id, 'org-id')
+
+    def test_member_get_boards_preserves_organization_id(self):
+        client = RoutingClient({
+            '/members/member-id/boards': [{
+                'id': 'board-id',
+                'name': 'Board',
+                'desc': '',
+                'closed': False,
+                'url': 'https://trello.example/board',
+                'idOrganization': 'org-id',
+            }],
+            '/organizations/org-id': {
+                'id': 'org-id',
+                'name': 'org',
+                'desc': '',
+                'url': 'https://trello.example/org',
+                'displayName': 'Organization',
+            },
+        })
+        boards = Member(client, 'member-id').get_boards('open')
+
+        self.assertEqual(boards[0].organization_id, 'org-id')
+        self.assertEqual(boards[0].organization.id, 'org-id')
+
+    def test_organization_get_boards_preserves_organization_id(self):
+        client = RoutingClient({
+            '/organizations/org-id/boards': [{
+                'id': 'board-id',
+                'name': 'Board',
+                'desc': '',
+                'closed': False,
+                'url': 'https://trello.example/board',
+                'idOrganization': 'org-id',
+            }],
+        })
+        organization = Organization(client, 'org-id', name='org')
+        boards = organization.get_boards('open')
+
+        self.assertIs(boards[0].organization, organization)
+        self.assertEqual(boards[0].organization_id, 'org-id')
 
 
 if __name__ == '__main__':
